@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💧 Unicrium Faucet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .info-box {
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 0.95em;
+        }
+        
+        .info-label {
+            color: #666;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .claim-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .claim-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .claim-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 Unicrium Faucet</h1>
+            <p>Get free testnet UNI coins</p>
+        </div>
+        
+        <div class="info-box">
+            <div class="info-item">
+                <span class="info-label">Amount per claim:</span>
+                <span class="info-value">1,000 UNI</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Cooldown:</span>
+                <span class="info-value">24 hours</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Faucet balance:</span>
+                <span class="info-value" id="faucetBalance">Loading...</span>
+            </div>
+        </div>
+        
+        <form id="claimForm">
+            <div class="input-group">
+                <label for="address">Your Unicrium Address:</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    placeholder="0x..." 
+                    required
+                    pattern="0x[a-fA-F0-9]{40}"
+                    title="Please enter a valid address starting with 0x"
+                >
+            </div>
+            
+            <button type="submit" class="claim-btn" id="claimBtn">
+                💧 Claim 1,000 UNI
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="footer">
+            <p>⚛️ Unicrium Network Testnet</p>
+            <p>One claim per address every 24 hours</p>
+        </div>
+    </div>
+    
+    <script>
+        const FAUCET_API = 'http://localhost:5001';
+        
+        // Load faucet balance
+        async function loadFaucetBalance() {
+            try {
+                const response = await fetch(`${FAUCET_API}/balance`);
+                const data = await response.json();
+                document.getElementById('faucetBalance').textContent = data.formatted || 'Unknown';
+            } catch (error) {
+                document.getElementById('faucetBalance').textContent = 'Error';
+            }
+        }
+        
+        // Show message
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+        }
+        
+        // Hide message
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+        
+        // Handle form submission
+        document.getElementById('claimForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const address = document.getElementById('address').value.trim();
+            const claimBtn = document.getElementById('claimBtn');
+            const loading = document.getElementById('loading');
+            
+            // Validate
+            if (!address.startsWith('0x') || address.length !== 42) {
+                showMessage('Invalid address format', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            claimBtn.disabled = true;
+            loading.style.display = 'block';
+            hideMessage();
+            
+            try {
+                const response = await fetch(`${FAUCET_API}/claim`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ address })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showMessage(`✅ Success! ${data.formatted} sent to your address. TXID: ${data.txid.substring(0, 16)}...`, 'success');
+                    document.getElementById('address').value = '';
+                    loadFaucetBalance();
+                } else {
+                    if (response.status === 429) {
+                        const hours = (data.retry_after_hours || 0).toFixed(1);
+                        showMessage(`⏱️ Please wait ${hours} hours before claiming again`, 'info');
+                    } else {
+                        showMessage(`❌ ${data.error || 'Failed to claim'}`, 'error');
+                    }
+                }
+            } catch (error) {
+                showMessage(`❌ Network error: ${error.message}`, 'error');
+            } finally {
+                claimBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+        
+        // Load balance on page load
+        loadFaucetBalance();
+        
+        // Refresh balance every 30 seconds
+        setInterval(loadFaucetBalance, 30000);
+    </script>
+</body>
+</html>

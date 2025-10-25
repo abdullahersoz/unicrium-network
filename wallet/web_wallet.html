@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚛️ Unicrium Web Wallet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .wallet-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 480px;
+            width: 100%;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .wallet-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .wallet-header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .wallet-header p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        .wallet-body {
+            padding: 32px;
+        }
+        
+        .balance-section {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 16px;
+        }
+        
+        .balance-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .balance-amount {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+        
+        .address-box {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+            border: 2px solid #e9ecef;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #6c757d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .wallet-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .wallet-actions .btn {
+            flex: 1;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wallet-container">
+        <div class="wallet-header">
+            <h1>⚛️ Unicrium Wallet</h1>
+            <p>Web3 Wallet for Unicrium Network</p>
+        </div>
+        
+        <div class="wallet-body">
+            <div class="balance-section">
+                <div class="balance-label">Your Balance</div>
+                <div class="balance-amount" id="balance">0.00000000 UNI</div>
+                <div class="address-box" id="address">Connect wallet to view address</div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('send')">📤 Send</button>
+                <button class="tab" onclick="switchTab('receive')">📥 Receive</button>
+            </div>
+            
+            <div id="send-tab" class="tab-content active">
+                <form id="sendForm">
+                    <div class="form-group">
+                        <label>Recipient Address</label>
+                        <input type="text" id="recipient" placeholder="0x..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount (UNI)</label>
+                        <input type="number" id="amount" placeholder="0.00" step="0.00000001" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        📤 Send Transaction
+                    </button>
+                </form>
+            </div>
+            
+            <div id="receive-tab" class="tab-content">
+                <div class="form-group">
+                    <label>Your Address</label>
+                    <div class="address-box" id="receiveAddress">Connect wallet first</div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="copyAddress()">
+                    📋 Copy Address
+                </button>
+            </div>
+            
+            <div class="wallet-actions">
+                <button class="btn btn-secondary" onclick="refreshBalance()">
+                    🔄 Refresh
+                </button>
+                <button class="btn btn-secondary" onclick="connectWallet()">
+                    🔗 Connect
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing...</p>
+            </div>
+            
+            <div class="alert" id="alert"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const BACKEND_URL = 'http://localhost:5555';
+        let currentAddress = null;
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+        
+        async function connectWallet() {
+            try {
+                showLoading(true);
+                
+                // Load wallet from localStorage or create new
+                let walletData = localStorage.getItem('unicrium_wallet');
+                
+                if (!walletData) {
+                    showAlert('Please use desktop wallet to create account first', 'error');
+                    showLoading(false);
+                    return;
+                }
+                
+                const wallet = JSON.parse(walletData);
+                currentAddress = wallet.address;
+                
+                document.getElementById('address').textContent = currentAddress;
+                document.getElementById('receiveAddress').textContent = currentAddress;
+                
+                await refreshBalance();
+                showAlert('Wallet connected!', 'success');
+            } catch (error) {
+                showAlert('Failed to connect: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function refreshBalance() {
+            if (!currentAddress) {
+                showAlert('Connect wallet first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/balance/${currentAddress}`);
+                const data = await response.json();
+                
+                const balance = data.balance / 100000000;
+                document.getElementById('balance').textContent = balance.toFixed(8) + ' UNI';
+            } catch (error) {
+                showAlert('Failed to fetch balance', 'error');
+            }
+        }
+        
+        document.getElementById('sendForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!currentAddress) {
+                showAlert('Connect wallet first', 'error');
+                return;
+            }
+            
+            const recipient = document.getElementById('recipient').value;
+            const amount = document.getElementById('amount').value;
+            
+            try {
+                showLoading(true);
+                
+                const walletData = JSON.parse(localStorage.getItem('unicrium_wallet'));
+                
+                const response = await fetch(`${BACKEND_URL}/transaction/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender: currentAddress,
+                        recipient: recipient,
+                        amount: amount,
+                        private_key: walletData.private_key
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(`Transaction sent! TXID: ${data.txid.substring(0, 16)}...`, 'success');
+                    document.getElementById('sendForm').reset();
+                    setTimeout(refreshBalance, 2000);
+                } else {
+                    showAlert('Transaction failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        function copyAddress() {
+            if (!currentAddress) {
+                showAlert('Connect wallet first', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentAddress);
+            showAlert('Address copied to clipboard!', 'success');
+        }
+        
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert ' + type;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        // Auto-connect on load
+        window.addEventListener('load', () => {
+            const wallet = localStorage.getItem('unicrium_wallet');
+            if (wallet) {
+                connectWallet();
+            }
+        });
+    </script>
+</body>
+</html>

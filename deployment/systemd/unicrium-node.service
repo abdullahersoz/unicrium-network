@@ -1,0 +1,16 @@
+[Unit]
+Description=Unicrium Blockchain Node
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/unicrium/unicrium-network
+ExecStart=/usr/bin/python3 blockchain/node.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/unicrium-node.log
+StandardError=append:/var/log/unicrium-node.log
+
+[Install]
+WantedBy=multi-user.target
